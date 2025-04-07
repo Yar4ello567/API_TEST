@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class Entity(BaseModel):
-    """Модель обьекта сущности"""
+    """Модель объекта сущности"""
     id: Optional[int] = None
     addition: Dict[str, Union[str, int, Optional[int]]]
     important_numbers: List[int]
