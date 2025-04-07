@@ -1,1 +1,4 @@
 cmd/__debug_bin
+__pycache__
+allure-reports
+venv
