@@ -8,6 +8,8 @@ class ResponseValidator:
     @staticmethod
     @allure.step('Проверить статус код ответа')
     def check_status_code(response, expected_codes: list[int] = [200]) -> None:
+        if response.status_code == 500:
+            raise ValueError(f"Сервер вернул 500 ошибку: {response.text}")
         assert response.status_code in expected_codes, (
             f'Ожидался статус код из {expected_codes}, получен {response.status_code}'
         )

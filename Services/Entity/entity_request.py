@@ -28,11 +28,18 @@ class EntityRequestHandler(BaseRequestHandler):
 
     @allure.step('Отправляем запрос получения сущности')
     def get_entity(self, entity_id: int) -> Optional[Entity]:
-        response = self._send_request(
-            'GET',
-            Endpoints.GET.format(id=entity_id)
-        )
-        return ResponseValidator.validate_response(Entity, response.json())
+        try:
+            response = self._send_request(
+                'GET',
+                Endpoints.GET.format(id=entity_id),
+                expected_codes=[200, 404]  # Ожидаем либо сущность, либо 404 если не найдена
+            )
+            if response.status_code == 404:
+                return None
+            return ResponseValidator.validate_response(Entity, response.json())
+        except ValueError as e:
+            allure.attach(str(e), "Ошибка при получении сущности")
+            return None
 
     @allure.step('Отправляем запрос получения списка всех сущностей')
     def get_all_entities(self) -> list[Entity]:
