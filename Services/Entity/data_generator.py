@@ -1,22 +1,25 @@
+from dataclasses import dataclass
 from random import randint
+from typing import Dict, List, Union
 
 
-class Generator:
-    """Класс генератор для создания данных"""
-    def generate_client_data():
-        """
- Генерирует данные клиента
- :return: Возвращает словарь данных клиента
-        """
-        title = ''
-        for _ in range(1, randint(4,10)):
-            title += chr(randint(97,122))
-        return {
-            'addition': {
+@dataclass
+class EntityData:
+    addition: Dict[str, Union[str, int]]
+    important_numbers: List[int]
+    title: str
+    verified: bool = True
+
+
+class DataGenerator:
+    @staticmethod
+    def generate_entity_data() -> EntityData:
+        title = ''.join(chr(randint(97, 122)) for _ in range(randint(4, 10)))
+        return EntityData(
+            addition={
                 'additional_info': 'Дополнительные сведения',
-                'additional_number': randint(0,10)
+                'additional_number': randint(0, 10)
             },
-            'important_numbers': [randint(0,99) for _ in range(randint(1,3))],
-            'title': title,
-            'verified': True
-            }
+            important_numbers=[randint(0, 99) for _ in range(randint(1, 3))],
+            title=title
+        )

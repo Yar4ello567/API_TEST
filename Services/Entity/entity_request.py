@@ -1,43 +1,50 @@
-from typing import List
-
+from typing import Optional
 import allure
-from pydantic import ValidationError
+from pydantic import BaseModel
 
 from Entity.entity_model import Entity
-from Services.Entity.request_handler import Request
+from endpoints import Endpoints
+from helpers import ResponseValidator
+from request_handler import BaseRequestHandler  # Убедитесь, что файл в корне проекта
 
-request = Request()
 
-
-class EntityRequest:
-    """Класс для отправки запросов в API сущностями"""
-    @staticmethod
+class EntityRequestHandler(BaseRequestHandler):
     @allure.step('Отправляем запрос добавления сущности')
-    def create_entity(entity: Entity) -> str:
-        response = request.send_request('POST', 'create', entity.model_dump_json())
-        return response.json()
+    def create_entity(self, entity: Entity) -> int:
+        response = self._send_request(
+            'POST',
+            Endpoints.CREATE,
+            entity.model_dump_json()
+        )
+        return int(response.json())
 
-    @staticmethod
     @allure.step('Отправляем запрос удаления сущности')
-    def delete_entity(id: int) -> None:
-        request.send_request('DELETE', f'delete/{id}')
+    def delete_entity(self, entity_id: int) -> None:
+        response = self._send_request(
+            'DELETE',
+            Endpoints.DELETE.format(id=entity_id),
+            expected_codes=[200, 204]  # Принимаем оба статуса
+        )
 
-    @staticmethod
     @allure.step('Отправляем запрос получения сущности')
-    def get_entity(id: int):
-        response = request.send_request('GET', f'get/{id}')
-        try:
-            return Entity.model_validate(response.json())
-        except ValidationError:
-            return False
+    def get_entity(self, entity_id: int) -> Optional[Entity]:
+        response = self._send_request(
+            'GET',
+            Endpoints.GET.format(id=entity_id)
+        )
+        return ResponseValidator.validate_response(Entity, response.json())
 
-    @staticmethod
     @allure.step('Отправляем запрос получения списка всех сущностей')
-    def get_all_entities() -> List[Entity]:
-        response = request.send_request('GET', f'getAll')
-        return [Entity.model_validate(entity) for entity in response.json()['entity']]
+    def get_all_entities(self) -> list[Entity]:
+        response = self._send_request('GET', Endpoints.GET_ALL)
+        data = response.json()
+        return [ResponseValidator.validate_response(Entity, entity) for entity in data['entity']]
 
-    @staticmethod
     @allure.step('Отправляем запрос изменения сущности')
-    def patch_entity(id: int, entity: Entity):
-        request.send_request('PATCH', f'patch/{id}', entity.model_dump_json())
+    def patch_entity(self, entity_id: int, entity: Entity) -> None:
+        response = self._send_request(
+            'PATCH',
+            Endpoints.PATCH.format(id=entity_id),
+            entity.model_dump_json(),
+            expected_codes=[200, 204]
+        )
